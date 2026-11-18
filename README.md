@@ -100,7 +100,7 @@ Run shpellcast on any Linux server with systemd. Ubuntu and Debian are the inten
 On the server:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/v1/install.sh | sudo bash
 ```
 
 The installer asks a few questions, each with a default:
@@ -120,7 +120,7 @@ Re-running the installer upgrades the binary and keeps your settings.
 For scripts, CI, or configuration management, pass flags and no questions are asked:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/main/install.sh | sudo bash -s -- \
+curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/v1/install.sh | sudo bash -s -- \
   --public-url https://shpellcast.godtech.in \
   --proxy caddy \
   --ttl 24h \
@@ -149,6 +149,13 @@ Without a terminal and without `--public-url`, the installer uses the server's I
 - With Caddy or nginx, writes a reverse-proxy config and reloads the server. An existing Caddyfile is backed up first.
 - If `ufw` is active, opens the needed ports.
 - Checks that the service answers before reporting success.
+
+The branch hosts the installer. The latest published GitHub release supplies the executable assets named `shpellcast-linux-amd64` and `shpellcast-linux-arm64`. To install before a release is available, check out the `v1` branch on the server and run this from the repository root with Go 1.22 or newer:
+
+```sh
+CGO_ENABLED=0 go build -trimpath -o shpellcast .
+sudo bash ./install.sh --binary ./shpellcast
+```
 
 ### HTTPS
 

@@ -17,6 +17,7 @@ TCP_PORT=""
 HTTP_PORT=""
 TTL=""
 DISK=""
+LOCAL_BINARY=""
 ASSUME_YES=0
 
 usage() {
@@ -32,6 +33,7 @@ Options:
   --http-port PORT   Port for the web pages        (default: 8080)
   --ttl DURATION     Link lifetime after output stops (default: 24h)
   --disk-save        Keep full output on disk so links survive restarts
+  --binary PATH      Install a locally built Linux executable
   --yes              Do not ask for confirmation
   -h, --help         Show this help
 EOF
@@ -47,6 +49,7 @@ while [ $# -gt 0 ]; do
     --http-port) HTTP_PORT="${2:-}"; shift 2 ;;
     --ttl) TTL="${2:-}"; shift 2 ;;
     --disk-save) DISK=yes; shift ;;
+    --binary) [ -n "${2:-}" ] || die "--binary requires a path"; LOCAL_BINARY="$2"; shift 2 ;;
     --yes|-y) ASSUME_YES=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown option: $1" >&2; usage >&2; exit 2 ;;
@@ -68,6 +71,14 @@ if [ -f "$CONF" ]; then
   # shellcheck disable=SC1090
   . "$CONF"
   EXISTING=1
+  SHPELLCAST_HTTP_ADDR="${SHPELLCAST_HTTP_ADDR:-:8080}"
+  SHPELLCAST_TCP_ADDR="${SHPELLCAST_TCP_ADDR:-:9000}"
+  HTTP_PORT="${SHPELLCAST_HTTP_ADDR##*:}"
+  TCP_PORT="${SHPELLCAST_TCP_ADDR##*:}"
+  PUBLIC_URL="${SHPELLCAST_PUBLIC_URL:-http://localhost:$HTTP_PORT}"
+  TTL="${SHPELLCAST_TTL:-24h}"
+  DISK=no
+  if [ -n "${SHPELLCAST_DATA_DIR:-}" ]; then DISK=yes; fi
 else
   EXISTING=0
 fi
@@ -80,7 +91,7 @@ ask() { # ask "question" default -> sets ANSWER
   ANSWER="${a:-$def}"
 }
 
-interactive() { [ -r /dev/tty ] && [ -w /dev/tty ] && [ "$ASSUME_YES" -eq 0 ]; }
+interactive() { [ "$ASSUME_YES" -eq 0 ] && ( : </dev/tty ) 2>/dev/null; }
 
 DEFAULT_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 DEFAULT_IP="${DEFAULT_IP:-127.0.0.1}"
@@ -111,7 +122,6 @@ if [ "$EXISTING" -eq 0 ]; then
       esac
     else
       PROXY=none
-      [ -n "$PUBLIC_URL" ] || PUBLIC_URL="http://$DEFAULT_IP"
     fi
     if [ -z "$HTTP_PORT" ]; then ask "Web port" "${HTTP_PORT_DEFAULT:-8080}"; HTTP_PORT="$ANSWER"; fi
     if [ -z "$TCP_PORT" ]; then ask "Port for nc" "9000"; TCP_PORT="$ANSWER"; fi
@@ -138,6 +148,13 @@ DOMAIN="${DOMAIN%%/*}"
 DOMAIN="${DOMAIN%%:*}"
 
 if [ "$PROXY" = none ]; then BIND_HOST=0.0.0.0; else BIND_HOST=127.0.0.1; fi
+if [ "$EXISTING" -eq 1 ]; then BIND_HOST="${SHPELLCAST_HTTP_ADDR%:*}"; fi
+case "$BIND_HOST" in
+  ""|0.0.0.0) HEALTH_HOST=127.0.0.1 ;;
+  '[::]') HEALTH_HOST='[::1]' ;;
+  *) HEALTH_HOST="$BIND_HOST" ;;
+esac
+HEALTH_URL="http://$HEALTH_HOST:$HTTP_PORT/healthz"
 
 echo
 echo "Plan:"
@@ -153,17 +170,21 @@ if interactive && [ "$ASSUME_YES" -eq 0 ]; then
   case "$ANSWER" in y|Y|yes) ;; *) echo "Cancelled. Nothing was changed."; exit 0 ;; esac
 fi
 
-echo "Downloading shpellcast ($ARCH)..."
-if [ "$VERSION" = latest ]; then
-  URL="https://github.com/$REPO/releases/latest/download/shpellcast-linux-$ARCH"
+if [ -n "$LOCAL_BINARY" ]; then
+  [ -f "$LOCAL_BINARY" ] && [ -r "$LOCAL_BINARY" ] || die "cannot read binary: $LOCAL_BINARY"
+  install -m 0755 -- "$LOCAL_BINARY" "$BIN"
 else
-  URL="https://github.com/$REPO/releases/download/$VERSION/shpellcast-linux-$ARCH"
+  echo "Downloading shpellcast ($ARCH)..."
+  if [ "$VERSION" = latest ]; then
+    URL="https://github.com/$REPO/releases/latest/download/shpellcast-linux-$ARCH"
+  else
+    URL="https://github.com/$REPO/releases/download/$VERSION/shpellcast-linux-$ARCH"
+  fi
+  TMP="$(mktemp)"
+  trap 'rm -f "$TMP"' EXIT
+  curl -fsSL -o "$TMP" "$URL" || die "could not download $URL. Check that the release includes shpellcast-linux-$ARCH, or build from source and use --binary."
+  install -m 0755 "$TMP" "$BIN"
 fi
-TMP="$(mktemp)"
-trap 'rm -f "$TMP"' EXIT
-curl -fsSL -o "$TMP" "$URL" || die "could not download $URL. Check the repository name and that a release exists."
-chmod 0755 "$TMP"
-install -m 0755 "$TMP" "$BIN"
 
 id -u shpellcast >/dev/null 2>&1 || useradd --system --home-dir "$DATA_DIR" --no-create-home --shell /usr/sbin/nologin shpellcast
 install -d -m 0750 -o shpellcast -g shpellcast "$DATA_DIR"
@@ -222,7 +243,10 @@ EOF
 
 systemctl daemon-reload
 systemctl enable shpellcast >/dev/null 2>&1
-systemctl restart shpellcast
+if ! systemctl restart shpellcast; then
+  journalctl -u shpellcast -n 20 --no-pager >&2 || true
+  die "systemd could not restart shpellcast"
+fi
 
 if [ "$PROXY" = caddy ]; then
   command -v caddy >/dev/null 2>&1 || apt-get install -y caddy || die "could not install Caddy. Install it, then re-run with --proxy caddy."
@@ -262,20 +286,23 @@ server {
 }
 EOF
   ln -sf "$NGX" /etc/nginx/sites-enabled/shpellcast
-  nginx -t && systemctl reload nginx
+  nginx -t || die "nginx configuration test failed"
+  systemctl reload nginx || die "nginx could not reload"
   echo "For HTTPS with nginx, run: sudo apt-get install -y certbot python3-certbot-nginx && sudo certbot --nginx -d $DOMAIN"
 fi
 
 if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
   ufw allow "$TCP_PORT/tcp" >/dev/null
-  [ "$PROXY" = none ] && ufw allow "$HTTP_PORT/tcp" >/dev/null
+  if [ "$PROXY" = none ]; then
+    case "$BIND_HOST" in 127.*|'[::1]'|localhost) ;; *) ufw allow "$HTTP_PORT/tcp" >/dev/null ;; esac
+  fi
   if [ "$PROXY" != none ]; then ufw allow 80/tcp >/dev/null; ufw allow 443/tcp >/dev/null; fi
   echo "Firewall: opened the needed ports."
 fi
 
 ok=0
 for _ in 1 2 3 4 5; do
-  if curl -fsS "http://127.0.0.1:$HTTP_PORT/healthz" >/dev/null 2>&1; then ok=1; break; fi
+  if curl -fsS --noproxy '*' --max-time 2 "$HEALTH_URL" >/dev/null 2>&1; then ok=1; break; fi
   sleep 1
 done
 if [ "$ok" -eq 1 ]; then
@@ -287,7 +314,7 @@ if [ "$ok" -eq 1 ]; then
   echo "  Logs       : sudo journalctl -u shpellcast -f"
 else
   echo
-  echo "shpellcast did not start. The last log lines:" >&2
+  echo "shpellcast did not answer at $HEALTH_URL. The last log lines:" >&2
   journalctl -u shpellcast -n 20 --no-pager >&2 || true
   exit 1
 fi
