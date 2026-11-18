@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Live cast · shpellcast</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/assets/viewer.css">
+</head>
+<body data-state="connecting">
+  <header class="top">
+    <a class="mark" href="/">shpellcast</a>
+    <div class="status" role="status" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="state">connecting</span>
+    </div>
+    <div class="watchers" id="watchers"></div>
+  </header>
+  <div class="rail" aria-hidden="true"></div>
+
+  <main id="main">
+    <p class="empty" id="empty" hidden>The link is live. Waiting for the first line<span class="caret" aria-hidden="true"></span></p>
+    <p class="faded" id="faded" hidden>This cast has faded.<br><a href="/">Cast a new one</a></p>
+    <div class="output" id="out" aria-label="Command output"></div>
+    <p class="seal" id="seal" hidden></p>
+  </main>
+
+  <nav class="dock" aria-label="Viewer actions">
+    <button id="jump" type="button" hidden>Jump to live</button>
+    <a id="raw" href="#">Download raw</a>
+  </nav>
+
+  <footer class="foot">Built with AIT Foundry</footer>
+  <script src="/assets/viewer.js" defer></script>
+</body>
+</html>

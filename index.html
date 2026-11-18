@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>shpellcast · cast your command's output somewhere else</title>
+  <meta name="description" content="Pipe any command's live output to a private, self-hosted web page. Share one link instead of screenshots or SSH access.">
+  <link rel="stylesheet" href="/assets/landing.css">
+</head>
+<body>
+  <header class="site">
+    <a class="mark" href="/">shpellcast</a>
+    <nav aria-label="Main">
+      <a href="#usage">Usage</a>
+      <a href="#self-host">Self-host</a>
+      <a href="#honest">Honest notes</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Live command output, shared by link</p>
+      <h1>Cast your command's output somewhere else.</h1>
+      <p class="lede">Pipe any long-running job to a private, live web page. Send one link to your team instead of screenshots or SSH access. Nothing to install on the machine that runs the job.</p>
+
+      <div class="incant" role="group" aria-label="Example command">
+        <code id="cmd">./deploy.sh 2>&1 | nc shpellcast.godtech.in 9000</code>
+        <button type="button" class="copy" data-copy="#cmd">Copy</button>
+      </div>
+
+      <p class="conjured" aria-label="The link appears here">
+        <span class="spark" aria-hidden="true">✦</span>
+        <span>https://shpellcast.godtech.in/s/Qx7_a9Lp2mTz4vWn8KeR1g</span>
+      </p>
+    </section>
+
+    <section id="usage" class="block">
+      <h2>Three steps</h2>
+      <ol class="steps">
+        <li><strong>Pipe</strong><span>Send any command's output to shpellcast over the network.</span></li>
+        <li><strong>Share</strong><span>The link appears at once. Anyone with it can watch, no sign-in needed.</span></li>
+        <li><strong>Watch</strong><span>Output arrives live, with colours and quiet-gap markers. A seal closes the run.</span></li>
+      </ol>
+    </section>
+
+    <section class="block">
+      <h2>Small incantations</h2>
+      <div class="recipes">
+        <div>
+          <h3>Any command, with nc</h3>
+          <code>make build 2>&amp;1 | nc shpellcast.godtech.in 9000</code>
+          <p>Use <code>nc -N</code> (OpenBSD) or <code>nc -q 0</code> (traditional) so the cast closes when the command finishes.</p>
+        </div>
+        <div>
+          <h3>Streamed upload, with curl</h3>
+          <code>./backup.sh 2>&amp;1 | curl -fsSN -T - https://shpellcast.godtech.in/ingest</code>
+          <p>Works anywhere curl does. The link is printed first, then output follows.</p>
+        </div>
+        <div>
+          <h3>Follow a log file</h3>
+          <code>tail -f app.log | nc shpellcast.godtech.in 9000</code>
+          <p>Any program that writes to a pipe works, including progress bars.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="honest" class="block">
+      <h2>Honest notes</h2>
+      <div class="pros-cons">
+        <div>
+          <h3>What it does well</h3>
+          <ul>
+            <li>Output reaches viewers as it is printed.</li>
+            <li>Links are long, random and expire 24 hours after output stops.</li>
+            <li>One small binary, no database, no accounts.</li>
+            <li>Progress bars redraw in place; colours are kept.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>What to know first</h3>
+          <ul>
+            <li>Anyone with a link can read it. Treat links like passwords.</li>
+            <li>Memory holds recent output only, unless disk saving is turned on.</li>
+            <li>No search, no filters, and no rewind beyond the kept history.</li>
+            <li>Not a logging system; use it to watch and share, not to archive.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="self-host" class="block self-host">
+      <h2>Host your own</h2>
+      <p>One command on an Ubuntu server. The installer asks a few questions and explains each one.</p>
+      <div class="incant" role="group" aria-label="Install command">
+        <code id="install">curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/main/install.sh | sudo bash</code>
+        <button type="button" class="copy" data-copy="#install">Copy</button>
+      </div>
+      <p class="muted">Unattended installs take flags such as <code>--public-url</code> and <code>--proxy caddy</code>. See the README for every option.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Built with AIT Foundry</p>
+  </footer>
+  <script src="/assets/landing.js" defer></script>
+</body>
+</html>

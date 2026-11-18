@@ -1,0 +1,31 @@
+[Unit]
+Description=shpellcast live command output sharing
+Documentation=https://github.com/shpellcast/shpellcast
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=shpellcast
+Group=shpellcast
+EnvironmentFile=-/etc/shpellcast/shpellcast.env
+ExecStart=/usr/local/bin/shpellcast
+Restart=on-failure
+RestartSec=2
+LimitNOFILE=65536
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+ReadWritePaths=/var/lib/shpellcast
+
+[Install]
+WantedBy=multi-user.target
