@@ -3,7 +3,7 @@
 server {
     listen 80;
     listen [::]:80;
-    server_name shpellcast.godtech.in;
+    server_name cast.example.com;
 
     client_max_body_size 0;
 

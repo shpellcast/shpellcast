@@ -46,7 +46,7 @@ func loadConfig() config {
 	maxStreams, _ := strconv.Atoi(envOr("SHPELLCAST_MAX_STREAMS", "10000"))
 	return config{
 		httpAddr:   envOr("SHPELLCAST_HTTP_ADDR", ":8080"),
-		tcpAddr:    envOr("SHPELLCAST_TCP_ADDR", ":9000"),
+		tcpAddr:    envOr("SHPELLCAST_TCP_ADDR", ":9696"),
 		publicURL:  envOr("SHPELLCAST_PUBLIC_URL", ""),
 		dataDir:    envOr("SHPELLCAST_DATA_DIR", ""),
 		ttl:        ttl,
@@ -66,7 +66,7 @@ func main() {
 	cfg := loadConfig()
 	flag.StringVar(&cfg.httpAddr, "http", cfg.httpAddr, "web and curl listen address")
 	flag.StringVar(&cfg.tcpAddr, "tcp", cfg.tcpAddr, "raw TCP listen address for nc")
-	flag.StringVar(&cfg.publicURL, "public-url", cfg.publicURL, "public base URL used in links, e.g. https://shpellcast.godtech.in")
+	flag.StringVar(&cfg.publicURL, "public-url", cfg.publicURL, "public base URL used in links, e.g. https://cast.example.com")
 	flag.StringVar(&cfg.dataDir, "data-dir", cfg.dataDir, "directory for disk spill (empty = memory only)")
 	flag.DurationVar(&cfg.ttl, "ttl", cfg.ttl, "how long a link lives after output stops")
 	flag.IntVar(&cfg.bufferSize, "buffer-bytes", cfg.bufferSize, "in-memory history kept per cast")

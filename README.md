@@ -21,7 +21,7 @@ Your team may already run shpellcast. If so, you only need the address and the n
 With `nc`:
 
 ```sh
-./deploy.sh 2>&1 | nc shpellcast.godtech.in 9000
+./deploy.sh 2>&1 | nc shpellcast.godtech.in 9696
 ```
 
 The link is printed straight away, before any output arrives:
@@ -107,7 +107,7 @@ The installer asks a few questions, each with a default:
 
 1. **How people will reach it:** a domain over HTTPS (recommended), or the server's address over plain HTTP for trying it out.
 2. **HTTPS tool:** Caddy (recommended, certificates are automatic), nginx, or none if you already have one.
-3. **Web port** (default `8080`) and **nc port** (default `9000`).
+3. **Web port** (default `8080`) and **nc port** (default `9696`).
 4. **Link lifetime** (default `24h`).
 5. **Disk saving** (default yes), so links survive restarts.
 
@@ -132,7 +132,7 @@ curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/v1/install.sh
 |---|---|---|
 | `--public-url URL` | Address people open. Used in every link. | `http://<server IP>:8080` |
 | `--proxy none\|caddy\|nginx` | HTTPS helper to install and configure | `none` |
-| `--tcp-port PORT` | Port for nc | `9000` |
+| `--tcp-port PORT` | Port for nc | `9696` |
 | `--http-port PORT` | Port for web pages | `8080` |
 | `--ttl DURATION` | Link lifetime after output stops | `24h` |
 | `--disk-save` | Keep full output on disk | on |
@@ -188,7 +188,7 @@ Edit `/etc/shpellcast/shpellcast.env`, then run `sudo systemctl restart shpellca
 |---|---|---|
 | `SHPELLCAST_PUBLIC_URL` | Base address used in links | set by installer |
 | `SHPELLCAST_HTTP_ADDR` | Web listen address | `127.0.0.1:8080` behind a proxy, `0.0.0.0:8080` otherwise |
-| `SHPELLCAST_TCP_ADDR` | nc listen address | `0.0.0.0:9000` |
+| `SHPELLCAST_TCP_ADDR` | nc listen address | `0.0.0.0:9696` |
 | `SHPELLCAST_TTL` | Link lifetime after output stops | `24h` |
 | `SHPELLCAST_DATA_DIR` | Directory for full output; empty means memory only | `/var/lib/shpellcast` |
 | `SHPELLCAST_MAX_STREAMS` | Casts running at once. New ones are refused above this. | `10000` |
@@ -208,7 +208,7 @@ curl -fsS http://127.0.0.1:8080/healthz # quick health check
 
 Open these ports, adjusting for your setup:
 
-- `9000/tcp` for nc
+- `9696/tcp` for nc
 - `80/tcp` and `443/tcp` if you use Caddy or nginx
 - `8080/tcp` only if you run with `--proxy none`
 
@@ -225,7 +225,7 @@ CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o shpellcast .
 ./shpellcast -public-url http://localhost:8080
 ```
 
-Then send output to `localhost:9000` with `nc`, or open the link it prints.
+Then send output to `localhost:9696` with `nc`, or open the link it prints.
 
 ---
 

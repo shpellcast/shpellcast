@@ -24,13 +24,13 @@
       <p class="lede">Pipe any long-running job to a private, live web page. Send one link to your team instead of screenshots or SSH access. Nothing to install on the machine that runs the job.</p>
 
       <div class="incant" role="group" aria-label="Example command">
-        <code id="cmd">./deploy.sh 2>&1 | nc shpellcast.godtech.in 9000</code>
+        <code id="cmd">./deploy.sh 2>&1 | nc cast.example.com 9696</code>
         <button type="button" class="copy" data-copy="#cmd">Copy</button>
       </div>
 
       <p class="conjured" aria-label="The link appears here">
         <span class="spark" aria-hidden="true">✦</span>
-        <span>https://shpellcast.godtech.in/s/Qx7_a9Lp2mTz4vWn8KeR1g</span>
+        <span>https://cast.example.com/s/Qx7_a9Lp2mTz4vWn8KeR1g</span>
       </p>
     </section>
 
@@ -48,17 +48,17 @@
       <div class="recipes">
         <div>
           <h3>Any command, with nc</h3>
-          <code>make build 2>&amp;1 | nc shpellcast.godtech.in 9000</code>
+          <code>make build 2>&amp;1 | nc cast.example.com 9696</code>
           <p>Use <code>nc -N</code> (OpenBSD) or <code>nc -q 0</code> (traditional) so the cast closes when the command finishes.</p>
         </div>
         <div>
           <h3>Streamed upload, with curl</h3>
-          <code>./backup.sh 2>&amp;1 | curl -fsSN -T - https://shpellcast.godtech.in/ingest</code>
+          <code>./backup.sh 2>&amp;1 | curl -fsSN -T - https://cast.example.com/ingest</code>
           <p>Works anywhere curl does. The link is printed first, then output follows.</p>
         </div>
         <div>
           <h3>Follow a log file</h3>
-          <code>tail -f app.log | nc shpellcast.godtech.in 9000</code>
+          <code>tail -f app.log | nc cast.example.com 9696</code>
           <p>Any program that writes to a pipe works, including progress bars.</p>
         </div>
       </div>

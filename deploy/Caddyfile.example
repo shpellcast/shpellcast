@@ -1,6 +1,6 @@
 # Caddy terminates HTTPS and gets certificates automatically.
 # Replace the domain with your own. Point its DNS A/AAAA record at this server first.
-shpellcast.godtech.in {
+cast.example.com {
 	reverse_proxy 127.0.0.1:8080 {
 		# Send output immediately instead of batching it.
 		flush_interval -1

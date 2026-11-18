@@ -27,9 +27,9 @@ Usage: sudo ./install.sh [options]
 Run with no options for guided questions (needs a terminal).
 
 Options:
-  --public-url URL   Address people will open, e.g. https://shpellcast.godtech.in
+  --public-url URL   Address people will open, e.g. https://cast.example.com
   --proxy NAME       none | caddy | nginx   (default: none)
-  --tcp-port PORT    Port for nc ingest           (default: 9000)
+  --tcp-port PORT    Port for nc ingest           (default: 9696)
   --http-port PORT   Port for the web pages        (default: 8080)
   --ttl DURATION     Link lifetime after output stops (default: 24h)
   --disk-save        Keep full output on disk so links survive restarts
@@ -72,7 +72,7 @@ if [ -f "$CONF" ]; then
   . "$CONF"
   EXISTING=1
   SHPELLCAST_HTTP_ADDR="${SHPELLCAST_HTTP_ADDR:-:8080}"
-  SHPELLCAST_TCP_ADDR="${SHPELLCAST_TCP_ADDR:-:9000}"
+  SHPELLCAST_TCP_ADDR="${SHPELLCAST_TCP_ADDR:-:9696}"
   HTTP_PORT="${SHPELLCAST_HTTP_ADDR##*:}"
   TCP_PORT="${SHPELLCAST_TCP_ADDR##*:}"
   PUBLIC_URL="${SHPELLCAST_PUBLIC_URL:-http://localhost:$HTTP_PORT}"
@@ -106,7 +106,7 @@ if [ "$EXISTING" -eq 0 ]; then
     echo "  2) This server's address over plain HTTP (for trying it out)"
     ask "Choose 1 or 2" "1"
     if [ "$ANSWER" = "1" ]; then
-      ask "Domain name, for example shpellcast.godtech.in" ""
+      ask "Domain name, for example cast.example.com" ""
       [ -n "$ANSWER" ] || die "a domain name is needed for HTTPS"
       PUBLIC_URL="https://${ANSWER#https://}"
       PUBLIC_URL="${PUBLIC_URL%/}"
@@ -124,7 +124,7 @@ if [ "$EXISTING" -eq 0 ]; then
       PROXY=none
     fi
     if [ -z "$HTTP_PORT" ]; then ask "Web port" "${HTTP_PORT_DEFAULT:-8080}"; HTTP_PORT="$ANSWER"; fi
-    if [ -z "$TCP_PORT" ]; then ask "Port for nc" "9000"; TCP_PORT="$ANSWER"; fi
+    if [ -z "$TCP_PORT" ]; then ask "Port for nc" "9696"; TCP_PORT="$ANSWER"; fi
     if [ -z "$TTL" ]; then ask "How long links last after output stops" "24h"; TTL="$ANSWER"; fi
     if [ -z "$DISK" ]; then
       ask "Keep full output on disk so links survive restarts? (y/n)" "y"
@@ -135,7 +135,7 @@ fi
 
 PROXY="${PROXY:-none}"
 HTTP_PORT="${HTTP_PORT:-8080}"
-TCP_PORT="${TCP_PORT:-9000}"
+TCP_PORT="${TCP_PORT:-9696}"
 TTL="${TTL:-24h}"
 DISK="${DISK:-yes}"
 case "$PROXY" in none|caddy|nginx) ;; *) die "--proxy must be none, caddy or nginx" ;; esac
