@@ -28,7 +28,10 @@ type config struct {
 	ttl        time.Duration
 	bufferSize int
 	maxStreams int
+	indexHome  bool
 }
+
+const noIndex = "noindex, nofollow"
 
 func envOr(key, def string) string {
 	if v := os.Getenv(key); v != "" {
@@ -44,6 +47,7 @@ func loadConfig() config {
 	}
 	buf, _ := strconv.Atoi(envOr("SHPELLCAST_BUFFER_BYTES", "262144"))
 	maxStreams, _ := strconv.Atoi(envOr("SHPELLCAST_MAX_STREAMS", "10000"))
+	indexHome, _ := strconv.ParseBool(os.Getenv("SHPELLCAST_INDEX_HOME"))
 	return config{
 		httpAddr:   envOr("SHPELLCAST_HTTP_ADDR", ":8080"),
 		tcpAddr:    envOr("SHPELLCAST_TCP_ADDR", ":9696"),
@@ -52,6 +56,7 @@ func loadConfig() config {
 		ttl:        ttl,
 		bufferSize: buf,
 		maxStreams: maxStreams,
+		indexHome:  indexHome,
 	}
 }
 
@@ -63,6 +68,13 @@ func portOf(addr string) string {
 }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "cast" {
+		if err := runCast(os.Args[2:], os.Stdin, os.Stdout, os.Stderr); err != nil {
+			log.SetFlags(0)
+			log.Fatal("shpellcast: ", err)
+		}
+		return
+	}
 	cfg := loadConfig()
 	flag.StringVar(&cfg.httpAddr, "http", cfg.httpAddr, "web and curl listen address")
 	flag.StringVar(&cfg.tcpAddr, "tcp", cfg.tcpAddr, "raw TCP listen address for nc")
@@ -71,6 +83,11 @@ func main() {
 	flag.DurationVar(&cfg.ttl, "ttl", cfg.ttl, "how long a link lives after output stops")
 	flag.IntVar(&cfg.bufferSize, "buffer-bytes", cfg.bufferSize, "in-memory history kept per cast")
 	flag.IntVar(&cfg.maxStreams, "max-streams", cfg.maxStreams, "maximum casts running at once")
+	flag.Usage = func() {
+		log.SetFlags(0)
+		log.Print("Usage: shpellcast [server flags] | shpellcast cast --help")
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 
 	if cfg.bufferSize < 1024 {
@@ -131,8 +148,8 @@ func (h *hub) routes() http.Handler {
 		log.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{$}", h.page("index.html"))
-	mux.HandleFunc("GET /s/{id}", h.page("assets/viewer.html"))
+	mux.HandleFunc("GET /{$}", h.page("index.html", h.cfg.indexHome))
+	mux.HandleFunc("GET /s/{id}", h.page("assets/viewer.html", false))
 	mux.HandleFunc("GET /s/{id}/events", h.handleEvents)
 	mux.HandleFunc("GET /s/{id}/raw", h.handleRaw)
 	mux.HandleFunc("POST /ingest", h.handleIngest)
@@ -145,7 +162,7 @@ func (h *hub) routes() http.Handler {
 	return mux
 }
 
-func (h *hub) page(name string) http.HandlerFunc {
+func (h *hub) page(name string, indexable bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := fs.ReadFile(siteFS, name)
 		if err != nil {
@@ -156,7 +173,9 @@ func (h *hub) page(name string) http.HandlerFunc {
 		hd.Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
 		hd.Set("X-Content-Type-Options", "nosniff")
 		hd.Set("Referrer-Policy", "no-referrer")
-		hd.Set("X-Robots-Tag", "noindex, nofollow")
+		if !indexable {
+			hd.Set("X-Robots-Tag", noIndex)
+		}
 		hd.Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(b)
 	}

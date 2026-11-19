@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>shpellcast · cast your command's output somewhere else</title>
-  <meta name="description" content="Pipe any command's live output to a private, self-hosted web page. Share one link instead of screenshots or SSH access.">
+  <title>Share Live Terminal Output and Logs | shpellcast</title>
+  <meta name="description" content="Stream live terminal output, deployment logs, or CI build logs to a browser link. Share with teammates without SSH access using open-source, self-hosted shpellcast.">
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/assets/landing.css">
 </head>
 <body>
@@ -13,95 +14,108 @@
     <nav aria-label="Main">
       <a href="#usage">Usage</a>
       <a href="#self-host">Self-host</a>
-      <a href="#honest">Honest notes</a>
+      <a href="https://github.com/shpellcast/shpellcast">GitHub</a>
     </nav>
   </header>
 
   <main>
-    <section class="hero">
-      <p class="eyebrow">Live command output, shared by link</p>
-      <h1>Cast your command's output somewhere else.</h1>
-      <p class="lede">Pipe any long-running job to a private, live web page. Send one link to your team instead of screenshots or SSH access. Nothing to install on the machine that runs the job.</p>
-
-      <div class="incant" role="group" aria-label="Example command">
-        <code id="cmd">./deploy.sh 2>&1 | nc cast.example.com 9696</code>
-        <button type="button" class="copy" data-copy="#cmd">Copy</button>
+    <section class="hero" aria-labelledby="title">
+      <h1 id="title">Share live terminal output with your team.</h1>
+      <p class="lede">Pipe a deployment, build, or log file to a browser link. Teammates can follow along as it happens, without SSH access or a shpellcast account.</p>
+      <div class="actions">
+        <a class="primary" href="#commands">Copy a command <span aria-hidden="true">↓</span></a>
+        <a href="#self-host">Self-host on Ubuntu</a>
       </div>
 
-      <p class="conjured" aria-label="The link appears here">
-        <span class="spark" aria-hidden="true">✦</span>
-        <span>https://cast.example.com/s/Qx7_a9Lp2mTz4vWn8KeR1g</span>
-      </p>
+      <figure class="demo" id="demo">
+        <figcaption>
+          <span>Example deployment</span>
+          <button type="button" class="button" id="play-demo" hidden>Play demo</button>
+        </figcaption>
+        <div class="demo-grid">
+          <section class="demo-pane" aria-labelledby="sender">
+            <h2 id="sender">Your terminal</h2>
+            <div class="demo-transcript">
+              <p class="demo-command"><span aria-hidden="true">$ </span><code>./deploy.sh 2&gt;&amp;1 | curl -fsSN -T - https://cast.example.com/ingest</code></p>
+              <div class="demo-link" data-demo-step="230">
+                <p><span aria-hidden="true">✦</span> Link ready to share</p>
+                <code>https://cast.example.com/s/Qx7_a9Lp2mTz4vWn8KeR1g</code>
+              </div>
+            </div>
+          </section>
+          <section class="demo-pane" aria-labelledby="teammate">
+            <h2 id="teammate">Your teammate’s browser</h2>
+            <div class="demo-transcript">
+              <ol class="demo-output" aria-label="Sample deployment output">
+                <li data-demo-step="820"><time>09:41:02</time> Building release</li>
+                <li data-demo-step="1280"><time>09:41:05</time> Rolling out to staging</li>
+                <li data-demo-step="1880"><time>09:41:12</time> Health check passed</li>
+              </ol>
+              <p class="demo-seal" data-demo-step="2260"><span aria-hidden="true">✦</span> Cast sealed <span aria-hidden="true">·</span> 3 lines</p>
+            </div>
+          </section>
+        </div>
+      </figure>
     </section>
 
     <section id="usage" class="block">
-      <h2>Three steps</h2>
+      <h2>Share a run in three steps</h2>
       <ol class="steps">
-        <li><strong>Pipe</strong><span>Send any command's output to shpellcast over the network.</span></li>
-        <li><strong>Share</strong><span>The link appears at once. Anyone with it can watch, no sign-in needed.</span></li>
-        <li><strong>Watch</strong><span>Output arrives live, with colours and quiet-gap markers. A seal closes the run.</span></li>
+        <li><strong>Pipe your command</strong><span>Point <code>curl</code> or <code>nc</code> at your shpellcast server.</span></li>
+        <li><strong>Share the link</strong><span>Copy the URL as soon as it appears and send it to your team.</span></li>
+        <li><strong>Watch together</strong><span>Open the link in a browser. The output updates as the command runs.</span></li>
       </ol>
-    </section>
 
-    <section class="block">
-      <h2>Small incantations</h2>
+      <h3 class="recipe-title" id="commands">Commands you can copy</h3>
+      <p class="usage-note">Replace <code>cast.example.com</code> with your server’s hostname. <code>2&gt;&amp;1</code> includes errors in the stream.</p>
       <div class="recipes">
-        <div>
-          <h3>Any command, with nc</h3>
-          <code>make build 2>&amp;1 | nc cast.example.com 9696</code>
-          <p>Use <code>nc -N</code> (OpenBSD) or <code>nc -q 0</code> (traditional) so the cast closes when the command finishes.</p>
-        </div>
-        <div>
-          <h3>Streamed upload, with curl</h3>
-          <code>./backup.sh 2>&amp;1 | curl -fsSN -T - https://cast.example.com/ingest</code>
-          <p>Works anywhere curl does. The link is printed first, then output follows.</p>
-        </div>
-        <div>
-          <h3>Follow a log file</h3>
-          <code>tail -f app.log | nc cast.example.com 9696</code>
-          <p>Any program that writes to a pipe works, including progress bars.</p>
-        </div>
+        <article>
+          <h4>Share a deployment</h4>
+          <p>Let your team follow a rollout and see the health checks as they finish.</p>
+          <div class="command"><code id="deploy-command">./deploy.sh 2&gt;&amp;1 | curl -fsSN -T - https://cast.example.com/ingest</code><button type="button" class="button copy" data-copy="#deploy-command" aria-label="Copy deployment command" hidden>Copy</button></div>
+        </article>
+        <article>
+          <h4>Follow a live log file</h4>
+          <p>Share incoming application logs while you troubleshoot together. Press Ctrl+C to stop following.</p>
+          <div class="command"><code id="logs-command">tail -f app.log | curl -fsSN -T - https://cast.example.com/ingest</code><button type="button" class="button copy" data-copy="#logs-command" aria-label="Copy log command" hidden>Copy</button></div>
+        </article>
+        <article>
+          <h4>Stream build output on a trusted network</h4>
+          <p>Send compiler and build messages with OpenBSD <code>nc</code>. This connection uses plain TCP.</p>
+          <div class="command"><code id="build-command">make build 2&gt;&amp;1 | nc -N cast.example.com 9696</code><button type="button" class="button copy" data-copy="#build-command" aria-label="Copy build command" hidden>Copy</button></div>
+        </article>
       </div>
     </section>
 
-    <section id="honest" class="block">
-      <h2>Honest notes</h2>
-      <div class="pros-cons">
-        <div>
-          <h3>What it does well</h3>
-          <ul>
-            <li>Output reaches viewers as it is printed.</li>
-            <li>Links are long, random and expire 24 hours after output stops.</li>
-            <li>One small binary, no database, no accounts.</li>
-            <li>Progress bars redraw in place; colours are kept.</li>
-          </ul>
-        </div>
-        <div>
-          <h3>What to know first</h3>
-          <ul>
-            <li>Anyone with a link can read it. Treat links like passwords.</li>
-            <li>Memory holds recent output only, unless disk saving is turned on.</li>
-            <li>No search, no filters, and no rewind beyond the kept history.</li>
-            <li>Not a logging system; use it to watch and share, not to archive.</li>
-          </ul>
-        </div>
-      </div>
+    <section id="self-host" class="block">
+      <h2>Self-host on Ubuntu or Debian</h2>
+      <p class="section-copy">Run the installer on your server. It guides you through choosing an address, HTTPS, and how long links stay available. shpellcast runs as one binary.</p>
+      <div class="command install-command"><code id="install-command">curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/v1/install.sh | sudo bash</code><button type="button" class="button copy" data-copy="#install-command" aria-label="Copy installation command" hidden>Copy</button></div>
+      <p class="section-copy"><a href="https://github.com/shpellcast/shpellcast/blob/v1/README.md#unattended-install">Unattended install and configuration</a></p>
     </section>
 
-    <section id="self-host" class="block self-host">
-      <h2>Host your own</h2>
-      <p>One command on an Ubuntu server. The installer asks a few questions and explains each one.</p>
-      <div class="incant" role="group" aria-label="Install command">
-        <code id="install">curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/v1/install.sh | sudo bash</code>
-        <button type="button" class="copy" data-copy="#install">Copy</button>
+    <section class="block questions">
+      <h2>Before you share</h2>
+      <div>
+        <h3>Who can see my output?</h3>
+        <p>Anyone with the link can watch. Share it only with the people who need it, and keep secrets and credentials out of the output.</p>
       </div>
-      <p class="muted">Unattended installs take flags such as <code>--public-url</code> and <code>--proxy caddy</code>. See the README for every option.</p>
+      <div>
+        <h3>How long does a link last?</h3>
+        <p>The default lifetime is 24 hours after output stops. Your server administrator can change it.</p>
+      </div>
+      <div>
+        <h3>Can I save a copy of the logs?</h3>
+        <p>Use <strong>Download raw</strong> in the viewer. With disk saving enabled, it includes the full log. In memory-only mode it includes the recent output the server has kept.</p>
+      </div>
     </section>
   </main>
 
   <footer class="foot">
-    <p>Built with AIT Foundry</p>
+    <a class="mark" href="/">shpellcast</a>
+    <span>Built with AIT Foundry</span>
   </footer>
+  <p id="copy-feedback" class="visually-hidden" role="status"></p>
   <script src="/assets/landing.js" defer></script>
 </body>
 </html>

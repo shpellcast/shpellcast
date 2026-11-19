@@ -26,8 +26,8 @@
   raw.href = base + "/raw";
 
   function setState(name, mode) {
-    stateEl.textContent = name;
-    document.body.dataset.state = mode;
+    if (stateEl.textContent !== name) stateEl.textContent = name;
+    if (document.body.dataset.state !== mode) document.body.dataset.state = mode;
   }
 
   function fmtDuration(sec) {
@@ -85,7 +85,8 @@
     seal.textContent = "";
     faded.hidden = true;
     jump.hidden = true;
-    empty.hidden = false;
+    raw.hidden = false;
+    empty.hidden = true;
   }
 
   function ensureLine() {
@@ -159,26 +160,27 @@
 
   function finish(stats) {
     endLine();
-    setState("sealed", "sealed");
+    setState("Sealed", "sealed");
     empty.hidden = true;
-    const glyph = '<span class="glyph">✦</span> ';
-    if (stats.lines === 0) {
-      seal.innerHTML = glyph + "cast complete · no output";
-    } else {
-      seal.innerHTML = glyph + "cast complete · " + fmtDuration(stats.duration) +
-        " · " + fmtBytes(stats.bytes) + " · " + plural(stats.lines, "line");
-    }
+    const glyph = document.createElement("span");
+    glyph.className = "glyph";
+    glyph.setAttribute("aria-hidden", "true");
+    glyph.textContent = "✦";
+    const details = stats.bytes === 0 ? "no output" :
+      fmtDuration(stats.duration) + " · " + fmtBytes(stats.bytes) + " · " + plural(stats.lines, "line");
+    seal.replaceChildren(glyph, " Cast sealed · " + details);
     seal.hidden = false;
     scheduleScroll();
   }
 
   function showFaded() {
-    setState("faded", "faded");
+    setState("Unavailable", "faded");
     empty.hidden = true;
     out.replaceChildren();
     faded.hidden = false;
     watchers.textContent = "";
     jump.hidden = true;
+    raw.hidden = true;
   }
 
   function parse(e) {
@@ -190,20 +192,21 @@
   }
 
   reset();
-  setState("connecting", "connecting");
+  raw.hidden = true;
+  setState("Connecting", "connecting");
 
   const es = new EventSource(base + "/events");
 
   es.addEventListener("snapshot", (e) => {
     reset();
-    setState("live", "live");
     const t = parse(e).t || "";
+    setState(t ? "Streaming" : "Waiting", t ? "streaming" : "waiting");
     if (t) writeChunk(t);
     else empty.hidden = false;
   });
 
   es.addEventListener("data", (e) => {
-    setState("live", "live");
+    setState("Streaming", "streaming");
     writeChunk(parse(e).t || "");
   });
 
@@ -221,7 +224,7 @@
     if (es.readyState === EventSource.CLOSED) {
       showFaded();
     } else {
-      setState("reconnecting", "connecting");
+      setState("Reconnecting", "connecting");
     }
   };
 })();

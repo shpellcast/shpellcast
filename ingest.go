@@ -52,6 +52,7 @@ func (h *hub) handleIngest(w http.ResponseWriter, r *http.Request) {
 	hd.Set("Content-Type", "text/plain; charset=utf-8")
 	hd.Set("Cache-Control", "no-store")
 	hd.Set("X-Accel-Buffering", "no")
+	hd.Set("Shpellcast-TTL", h.cfg.ttl.String())
 	fmt.Fprintf(w, "%s\n", h.link(s.id))
 	if err := rc.Flush(); err != nil {
 		return
@@ -68,6 +69,7 @@ func writeEvent(w io.Writer, event string, v any) {
 }
 
 func (h *hub) handleEvents(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Robots-Tag", noIndex)
 	s := h.get(r.PathValue("id"))
 	if s == nil {
 		http.NotFound(w, r)
@@ -123,6 +125,7 @@ func (h *hub) handleEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *hub) handleRaw(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Robots-Tag", noIndex)
 	s := h.get(r.PathValue("id"))
 	if s == nil {
 		http.NotFound(w, r)
