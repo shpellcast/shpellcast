@@ -3,116 +3,107 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101210">
   <title>Share Live Terminal Output and Logs | shpellcast</title>
-  <meta name="description" content="Stream live terminal output, deployment logs, or CI build logs to a browser link. Share with teammates without SSH access using open-source, self-hosted shpellcast.">
+  <meta name="description" content="Pipe live terminal output to shpellcast with nc or curl. Share deployments, builds, and logs by browser link. No shpellcast install or account.">
+  <link rel="canonical" href="https://shpellcast.godtech.in/">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/assets/landing.css">
 </head>
 <body>
-  <header class="site">
-    <a class="mark" href="/">shpellcast</a>
+  <header class="site shell">
+    <a class="mark" href="https://shpellcast.godtech.in/"><span aria-hidden="true">›_</span> shpellcast</a>
     <nav aria-label="Main">
-      <a href="#usage">Usage</a>
+      <a href="#usage">Quick start</a>
       <a href="#self-host">Self-host</a>
-      <a href="https://github.com/shpellcast/shpellcast">GitHub</a>
+      <a href="https://github.com/shpellcast/shpellcast">GitHub <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
 
-  <main>
-    <section class="hero" aria-labelledby="title">
-      <h1 id="title">Share live terminal output with your team.</h1>
-      <p class="lede">Pipe a deployment, build, or log file to a browser link. Teammates can follow along as it happens, without SSH access or a shpellcast account.</p>
-      <div class="actions">
-        <a class="primary" href="#commands">Copy a command <span aria-hidden="true">↓</span></a>
-        <a href="#self-host">Self-host on Ubuntu</a>
+  <main class="shell">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="intro">
+        <h1 id="hero-title">Your terminal.<br>Their browser.</h1>
+        <p class="lede">A deploy can take minutes. Nobody should have to wait for a screenshot. Pipe your terminal output to shpellcast and share a link your team can watch live.</p>
+        <div class="pipe">
+          <p>Append to a command in your terminal</p>
+          <code id="pipe-suffix"> | nc shpellcast.godtech.in 9696</code>
+          <button type="button" class="button copy primary" data-copy="#pipe-suffix" hidden>Copy pipe command</button>
+        </div>
+        <div class="hero-links">
+          <a id="see-demo" href="#demo"><span aria-hidden="true">▷</span> See it in action</a>
+          <a href="#commands">Try a sample <span aria-hidden="true">↓</span></a>
+        </div>
+        <p class="quiet">Use the <code>nc</code> or <code>curl</code> you already have. No shpellcast install or account.</p>
       </div>
 
-      <figure class="demo" id="demo">
-        <figcaption>
-          <span>Example deployment</span>
-          <button type="button" class="button" id="play-demo" hidden>Play demo</button>
+      <figure class="demo" id="demo" aria-labelledby="demo-title" tabindex="-1">
+        <figcaption id="demo-title">
+          <div><strong>Staging deployment</strong><small>Simulated demo</small></div>
+          <button type="button" class="button replay" id="play-demo" hidden>Play demo</button>
         </figcaption>
-        <div class="demo-grid">
-          <section class="demo-pane" aria-labelledby="sender">
-            <h2 id="sender">Your terminal</h2>
-            <div class="demo-transcript">
-              <p class="demo-command"><span aria-hidden="true">$ </span><code>./deploy.sh 2&gt;&amp;1 | curl -fsSN -T - https://cast.example.com/ingest</code></p>
-              <div class="demo-link" data-demo-step="230">
-                <p><span aria-hidden="true">✦</span> Link ready to share</p>
-                <code>https://cast.example.com/s/Qx7_a9Lp2mTz4vWn8KeR1g</code>
-              </div>
+        <section class="panel" aria-labelledby="sender-title">
+          <h2 id="sender-title"><span class="green" aria-hidden="true">$</span> Your terminal</h2>
+          <div class="terminal">
+            <p class="prompt"><span class="green" aria-hidden="true">›</span><code data-reveal="240">./deploy.sh staging 2&gt;&amp;1<span class="green"> | nc shpellcast.godtech.in 9696</span></code></p>
+            <div class="demo-link" data-reveal="810">
+              <p><span class="spark" aria-hidden="true">✦</span> Your cast link appears</p>
+              <code>https://shpellcast.godtech.in/s/&lt;cast-id&gt;</code>
             </div>
-          </section>
-          <section class="demo-pane" aria-labelledby="teammate">
-            <h2 id="teammate">Your teammate’s browser</h2>
-            <div class="demo-transcript">
-              <ol class="demo-output" aria-label="Sample deployment output">
-                <li data-demo-step="820"><time>09:41:02</time> Building release</li>
-                <li data-demo-step="1280"><time>09:41:05</time> Rolling out to staging</li>
-                <li data-demo-step="1880"><time>09:41:12</time> Health check passed</li>
-              </ol>
-              <p class="demo-seal" data-demo-step="2260"><span aria-hidden="true">✦</span> Cast sealed <span aria-hidden="true">·</span> 3 lines</p>
-            </div>
-          </section>
-        </div>
+          </div>
+        </section>
+        <section class="panel preview" aria-labelledby="receiver-title">
+          <header><h2 id="receiver-title">Teammate’s browser</h2><span id="demo-state" class="state" data-state="sealed">Sealed</span></header>
+          <div class="terminal">
+            <ol class="log" role="list" aria-label="Sample deployment output">
+              <li data-reveal="1510"><time>09:41:02</time><span>Building release 1.18.4</span></li>
+              <li data-reveal="2160"><time>09:41:06</time><span><strong>WARN</strong> Cache miss, rebuilding assets</span></li>
+              <li data-reveal="2800"><time>09:41:13</time><span>Rollout <span class="green" aria-hidden="true">[■■··]</span> 2/4 pods ready</span></li>
+              <li data-reveal="3490"><time>09:41:19</time><span>Rollout <span class="green" aria-hidden="true">[■■■■]</span> 4/4 pods ready</span></li>
+              <li data-reveal="4070"><time>09:41:24</time><span class="green">OK Health checks passed</span></li>
+            </ol>
+            <p class="seal" data-reveal="4650"><span class="green" aria-hidden="true">✦</span> Cast sealed <span aria-hidden="true">·</span> 22s <span aria-hidden="true">·</span> 5 lines</p>
+          </div>
+        </section>
       </figure>
     </section>
 
-    <section id="usage" class="block">
-      <h2>Share a run in three steps</h2>
-      <ol class="steps">
-        <li><strong>Pipe your command</strong><span>Point <code>curl</code> or <code>nc</code> at your shpellcast server.</span></li>
-        <li><strong>Share the link</strong><span>Copy the URL as soon as it appears and send it to your team.</span></li>
-        <li><strong>Watch together</strong><span>Open the link in a browser. The output updates as the command runs.</span></li>
-      </ol>
-
-      <h3 class="recipe-title" id="commands">Commands you can copy</h3>
-      <p class="usage-note">Replace <code>cast.example.com</code> with your server’s hostname. <code>2&gt;&amp;1</code> includes errors in the stream.</p>
-      <div class="recipes">
-        <article>
-          <h4>Share a deployment</h4>
-          <p>Let your team follow a rollout and see the health checks as they finish.</p>
-          <div class="command"><code id="deploy-command">./deploy.sh 2&gt;&amp;1 | curl -fsSN -T - https://cast.example.com/ingest</code><button type="button" class="button copy" data-copy="#deploy-command" aria-label="Copy deployment command" hidden>Copy</button></div>
-        </article>
-        <article>
-          <h4>Follow a live log file</h4>
-          <p>Share incoming application logs while you troubleshoot together. Press Ctrl+C to stop following.</p>
-          <div class="command"><code id="logs-command">tail -f app.log | curl -fsSN -T - https://cast.example.com/ingest</code><button type="button" class="button copy" data-copy="#logs-command" aria-label="Copy log command" hidden>Copy</button></div>
-        </article>
-        <article>
-          <h4>Stream build output on a trusted network</h4>
-          <p>Send compiler and build messages with OpenBSD <code>nc</code>. This connection uses plain TCP.</p>
-          <div class="command"><code id="build-command">make build 2&gt;&amp;1 | nc -N cast.example.com 9696</code><button type="button" class="button copy" data-copy="#build-command" aria-label="Copy build command" hidden>Copy</button></div>
-        </article>
+    <section class="section quick-start" id="usage">
+      <div>
+        <h2>Cast your first line.</h2>
+        <p>Run the sample, then open the link that prints in your terminal. Send it to whoever needs to follow along.</p>
+        <p class="privacy">Anyone with the link can watch until it expires. Keep secrets and sensitive output out of public casts.</p>
+      </div>
+      <div class="examples" id="commands">
+        <div class="command"><code id="sample-nc">printf 'Hello from my terminal\n' | nc shpellcast.godtech.in 9696</code><button type="button" class="button copy" data-copy="#sample-nc" aria-label="Copy nc sample" hidden>Copy</button></div>
+        <p class="quiet">The <code>nc</code> pipe uses plain TCP. If it stays open after the command finishes, press Ctrl+C.</p>
+        <details>
+          <summary>Use curl over HTTPS</summary>
+          <div class="command"><code id="sample-curl">printf 'Hello from my terminal\n' | curl -fsSN -T - https://shpellcast.godtech.in/ingest</code><button type="button" class="button copy" data-copy="#sample-curl" aria-label="Copy HTTPS sample" hidden>Copy</button></div>
+        </details>
       </div>
     </section>
 
-    <section id="self-host" class="block">
-      <h2>Self-host on Ubuntu or Debian</h2>
-      <p class="section-copy">Run the installer on your server. It guides you through choosing an address, HTTPS, and how long links stay available. shpellcast runs as one binary.</p>
-      <div class="command install-command"><code id="install-command">curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/v1/install.sh | sudo bash</code><button type="button" class="button copy" data-copy="#install-command" aria-label="Copy installation command" hidden>Copy</button></div>
-      <p class="section-copy"><a href="https://github.com/shpellcast/shpellcast/blob/v1/README.md#unattended-install">Unattended install and configuration</a></p>
+    <section class="section uses">
+      <h2>What could you cast?</h2>
+      <dl>
+        <div><dt>Deployments and builds</dt><dd>Follow the rollout and see the first failing step together.</dd></div>
+        <div><dt>Migrations and backups</dt><dd>Share progress while a long-running job works through the queue.</dd></div>
+        <div><dt>Debugging</dt><dd>Watch the same log tail while you troubleshoot.</dd></div>
+      </dl>
     </section>
 
-    <section class="block questions">
-      <h2>Before you share</h2>
+    <section class="section self-host" id="self-host">
       <div>
-        <h3>Who can see my output?</h3>
-        <p>Anyone with the link can watch. Share it only with the people who need it, and keep secrets and credentials out of the output.</p>
+        <h2>Self-host shpellcast</h2>
+        <p>Run your own instance on Ubuntu or Debian to control the network, storage, and link lifetime.</p>
       </div>
-      <div>
-        <h3>How long does a link last?</h3>
-        <p>The default lifetime is 24 hours after output stops. Your server administrator can change it.</p>
-      </div>
-      <div>
-        <h3>Can I save a copy of the logs?</h3>
-        <p>Use <strong>Download raw</strong> in the viewer. With disk saving enabled, it includes the full log. In memory-only mode it includes the recent output the server has kept.</p>
-      </div>
+      <a href="https://github.com/shpellcast/shpellcast/blob/v1/README.md#self-hosting">Read the self-hosting guide <span aria-hidden="true">↗</span></a>
     </section>
   </main>
 
-  <footer class="foot">
-    <a class="mark" href="/">shpellcast</a>
+  <footer class="foot shell">
+    <a href="https://shpellcast.godtech.in/">shpellcast.godtech.in</a>
     <span>Built with AIT Foundry</span>
   </footer>
   <p id="copy-feedback" class="visually-hidden" role="status"></p>

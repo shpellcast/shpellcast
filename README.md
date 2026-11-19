@@ -14,11 +14,23 @@ shpellcast turns any command's live output into a private web page. Pipe a long-
 
 ## Using shpellcast
 
-Your team may already run shpellcast. If so, you only need the address and the nc port.
+Start at the [public shpellcast instance](https://shpellcast.godtech.in/). You can stream immediately with the nc or curl you already have, without a shpellcast install or account. If your team runs its own instance, use its hostname and ports.
 
 ### Send a command's output
 
-With `nc`:
+Append this to a command in your terminal:
+
+```sh
+ | nc shpellcast.godtech.in 9696
+```
+
+Try it with a sample:
+
+```sh
+printf 'Hello from my terminal\n' | nc shpellcast.godtech.in 9696
+```
+
+For a deployment script, add `2>&1` before the pipe to include stderr:
 
 ```sh
 ./deploy.sh 2>&1 | nc shpellcast.godtech.in 9696
@@ -27,10 +39,10 @@ With `nc`:
 The link is printed straight away, before any output arrives:
 
 ```
-https://shpellcast.godtech.in/s/Qx7_a9Lp2mTz4vWn8KeR1g
+https://shpellcast.godtech.in/s/<cast-id>
 ```
 
-Open it in any browser. Output appears live.
+Open the URL printed by your command and share it with whoever needs to follow along. Anyone with the link can watch until it expires. Raw nc traffic uses plain TCP. Use curl over HTTPS for encryption in transit and keep sensitive output out of public casts.
 
 When the command finishes, the stream closes and the page shows a seal with the duration, size and line count. If your `nc` keeps the connection open after its input ends, add `-N` (OpenBSD `nc`) or `-q 0` (traditional `netcat`) so the cast closes when the command does.
 
@@ -129,7 +141,7 @@ For scripts, CI, or configuration management, pass flags and no questions are as
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/shpellcast/shpellcast/v1/install.sh | sudo bash -s -- \
-  --public-url https://shpellcast.godtech.in \
+  --public-url https://cast.example.com \
   --proxy caddy \
   --ttl 24h \
   --disk-save \
@@ -171,7 +183,7 @@ sudo bash ./install.sh --binary ./shpellcast
 **Caddy** (chosen by the installer, or copy `deploy/Caddyfile.example`):
 
 ```
-shpellcast.godtech.in {
+cast.example.com {
 	reverse_proxy 127.0.0.1:8080 {
 		flush_interval -1
 	}
@@ -184,7 +196,7 @@ Caddy gets and renews certificates by itself. Ports 80 and 443 must be open to t
 
 ```sh
 sudo apt-get install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d shpellcast.godtech.in
+sudo certbot --nginx -d cast.example.com
 ```
 
 **Your own proxy** (`--proxy external`): forward to `http://127.0.0.1:8080` or the web port you selected. Configure TLS on the proxy and disable request and response buffering. The `nc` port is a separate plain TCP listener.
